@@ -1,0 +1,151 @@
+let printedLines = [];
+let lineHeight = 28;
+
+let maxBatchSize = 5;
+let linePrintDelay = 20;
+let lineTimer = 0;
+
+let currentBatch = [];
+let currentLineIndex = 0;
+let printing = false;
+
+let receiptX, receiptWidth;
+let monoFont;
+let cooperFont;
+
+const customItems = [
+  "icon", "candle", "bracelet", "necklace", "keychain", "bookmark",
+  "book", "calendar", "car accessory", "glasses case", "shot glass",
+  "tablecloth/runner", "placemat/coaster", "wall clock", "pillowcase/duvet cover"
+];
+
+function preload() {
+  cooperFont = loadFont("CooperBlack.ttf"); 
+}
+
+function setup() {
+  createCanvas(400, 600);
+  monoFont = "monospace";
+  textFont(monoFont);
+  textSize(14);
+  textAlign(CENTER, TOP);
+
+  receiptWidth = width / 2;
+  receiptX = (width - receiptWidth) / 2;
+}
+
+function draw() {
+  background(173, 216, 230); // Light blue
+  let receiptHeight = printedLines.length * lineHeight;
+
+  if (receiptHeight > 0) {
+    noStroke();
+    fill(204, 204, 0); // Darker yellow border
+    rect(receiptX - 2, -2, receiptWidth + 4, receiptHeight + 4);
+
+    fill(255, 240, 0); // Bright yellow paper
+    rect(receiptX, 0, receiptWidth, receiptHeight);
+  }
+
+  for (let i = 0; i < printedLines.length && i < floor(height / lineHeight); i++) {
+    let line = printedLines[i];
+    let y = i * lineHeight + 5;
+
+    if (line === "ARSENIE BOCA®") {
+      drawStar(width / 2, y + lineHeight / 2, receiptWidth * 0.2, receiptWidth * 0.4, 5);
+
+      textFont(cooperFont);
+      textAlign(CENTER, TOP);
+      let fontSize = 10;
+      textSize(fontSize);
+      while (textWidth(line) < receiptWidth - 20 && fontSize < 60) {
+        fontSize++;
+        textSize(fontSize);
+      }
+      textSize(--fontSize);
+      fill(0);
+      text(line, width / 2, y);
+      textSize(14);
+    } else if ([
+      "Your new and improved", "home shall include a", "brand new",
+      "Thank you", "for playing!", " ", "----------------------"
+    ].includes(line)) {
+      textFont(monoFont);
+      textSize(14);
+      textAlign(CENTER, TOP);
+      fill(0);
+      text(line, width / 2, y);
+    } else {
+      textFont(cooperFont);
+      textSize(12);
+      textAlign(CENTER, TOP);
+      fill(0);
+      text(line, width / 2, y);
+    }
+  }
+
+  if (printing) {
+    lineTimer++;
+    if (lineTimer >= linePrintDelay && currentLineIndex < currentBatch.length) {
+      printedLines.unshift(currentBatch[currentLineIndex]);
+      currentLineIndex++;
+      lineTimer = 0;
+    }
+    if (currentLineIndex >= currentBatch.length) {
+      printing = false;
+    }
+  }
+}
+
+function keyPressed() {
+  if (key === ' ' && !printing) {
+    startNewBatch();
+  }
+}
+function mousePressed() {
+  if (!printing) {
+    startNewBatch();
+  }
+}
+
+function startNewBatch() {
+  currentBatch = [];
+  let batch = [
+    "Your new and improved",
+    "home shall include a",
+    "brand new",
+    "ARSENIE BOCA®",
+    " "
+  ];
+
+  let itemCount = floor(random(1, maxBatchSize + 1));
+  for (let i = 0; i < itemCount; i++) {
+    batch.push(random(customItems).substring(0, 30));
+  }
+  for (let i = 0; i < maxBatchSize - itemCount; i++) {
+    batch.push("");
+  }
+
+  batch.push("Thank you");
+  batch.push("for playing!");
+  batch.push("----------------------");
+
+  currentBatch = batch.reverse();
+  currentLineIndex = 0;
+  printing = true;
+}
+
+function drawStar(x, y, r1, r2, n) {
+  push();
+  fill('#FF00FFAA');
+  noStroke();
+  beginShape();
+  let angle = TWO_PI / n;
+  let half = angle / 2;
+  for (let a = 0; a < TWO_PI; a += angle) {
+    vertex(x + cos(a) * r2, y + sin(a) * r2);
+    vertex(x + cos(a + half) * r1, y + sin(a + half) * r1);
+  }
+  endShape(CLOSE);
+  pop();
+}
